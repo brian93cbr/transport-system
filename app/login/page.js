@@ -23,7 +23,7 @@ export default function LoginPage() {
       setError(err.message.includes('banned') ? '此帳號已停用，請洽交通組長。' : '使用者名稱或密碼錯誤。');
       return;
     }
-    window.location.href = '/trips';
+    window.location.href = '/overview';
   }
 
   return (

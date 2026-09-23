@@ -1,12 +1,13 @@
 'use client';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { getSupabase } from '@/lib/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import Modal from '@/components/Modal';
-import { DEFAULT_LEAD_MINUTES, TRIP_STATUS } from '@/lib/constants';
+import { TRIP_STATUS } from '@/lib/constants';
 import { dbError, emptyToNull, fmtDate, fmtDateFull, groupBy, hm, mapsUrl, minusMinutes, toIntOrNull } from '@/lib/utils';
-import { groupCountMap, headcountLabel, tripCapacity, tripHeadcount, vehicleCount } from '@/lib/calc';
-import { loadPrivateNotes, savePrivateNote } from '@/lib/privateNotes';
+import { headcountLabel, tripCapacity, tripHeadcount, vehicleCount } from '@/lib/calc';
+import { savePrivateNote } from '@/lib/privateNotes';
+import { useTransportData } from '@/lib/useTransportData';
 
 const EMPTY = {
   date: '', depart_time: '', arrive_time: '', schedule_item_id: '',
@@ -18,51 +19,12 @@ const EMPTY = {
 export default function TripsPage() {
   const supabase = getSupabase();
   const { isOwner } = useAuth();
-  const [data, setData] = useState(null);
-  const [notes, setNotes] = useState({});
+  const { data, lk: lookups, computed, notes, error, setError, reload: load } = useTransportData();
   const [dateFilter, setDateFilter] = useState('');
   const [editing, setEditing] = useState(null);
-  const [error, setError] = useState('');
-
-  const load = useCallback(async () => {
-    const [trips, locs, sched, types, vendors, counts, setting] = await Promise.all([
-      supabase.from('trips').select('*').order('date').order('depart_time'),
-      supabase.from('locations').select('*').order('name'),
-      supabase.from('schedule_items').select('*').order('date').order('start_time'),
-      supabase.from('vehicle_types').select('*').order('capacity', { ascending: false }),
-      supabase.from('vendors').select('*').order('name'),
-      supabase.rpc('roster_group_counts'),
-      supabase.from('settings').select('value').eq('key', 'trip_lead_minutes').maybeSingle(),
-    ]);
-    const firstErr = [trips, locs, sched, types, vendors, counts].find((r) => r.error);
-    if (firstErr) setError(dbError(firstErr.error));
-    setData({
-      trips: trips.data || [],
-      locations: locs.data || [],
-      schedule: sched.data || [],
-      types: types.data || [],
-      vendors: vendors.data || [],
-      counts: groupCountMap(counts.data),
-      lead: setting.data ? Number(setting.data.value) : DEFAULT_LEAD_MINUTES,
-    });
-    if (isOwner) setNotes(await loadPrivateNotes(supabase, 'trips'));
-  }, [supabase, isOwner]);
-
-  useEffect(() => { load(); }, [load]);
-
-  const lookups = useMemo(() => {
-    if (!data) return null;
-    const by = (arr) => Object.fromEntries(arr.map((x) => [x.id, x]));
-    return { loc: by(data.locations), sched: by(data.schedule), type: by(data.types), vendor: by(data.vendors) };
-  }, [data]);
 
   if (!data) return <div className="loading">載入中…</div>;
 
-  const computed = data.trips.map((t) => {
-    const hc = tripHeadcount(t, data.counts);
-    const cap = tripCapacity(t, lookups.type);
-    return { ...t, hc, cap, vehicles: vehicleCount(hc.total, cap) };
-  });
   const dates = [...new Set(computed.map((t) => t.date))];
   const shown = computed.filter((t) => !dateFilter || t.date === dateFilter);
   const byDate = groupBy(shown, (t) => t.date);

@@ -239,3 +239,47 @@ table.data td.nowrap { white-space: nowrap; }
 .toolbar .input, .toolbar .select { width: auto; min-width: 160px; }
 .vendor-block + .vendor-block { margin-top: 16px; }
 .loading { padding: 40px; text-align: center; color: var(--muted); }
+
+/* ---------- v0.2.0：日程總覽、派車需求 ---------- */
+.date-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.date-tabs button {
+  border: 1px solid var(--line); background: var(--surface);
+  padding: 6px 14px; border-radius: 999px; cursor: pointer; font-variant-numeric: tabular-nums;
+}
+.date-tabs button:hover { border-color: #b9c2d0; }
+.date-tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+.check-list > div + div { margin-top: 6px; }
+.detail-toggle { border-top: 1px solid var(--line); }
+.detail-toggle summary { cursor: pointer; color: var(--route); font-size: 14px; }
+
+.plate.sm { font-size: 12px; padding: 2px 6px; border-radius: 4px; box-shadow: none; }
+
+.timeline-wrap { overflow-x: auto; padding: 4px 12px 16px 0; }
+.timeline { position: relative; }
+.tl-head { display: flex; border-bottom: 1px solid var(--line); }
+.tl-axis-head { width: 60px; flex: none; }
+.tl-zone-head { flex: none; padding: 10px 10px; font-weight: 600; font-size: 13px; color: var(--ink-soft); }
+.tl-zone-head.trips { border-left: 2px solid var(--line); color: var(--route); }
+.tl-body { position: relative; display: flex; margin-top: 12px; }
+.tl-axis { width: 60px; flex: none; position: relative; }
+.tl-hour {
+  position: absolute; left: 0; width: 50px; text-align: right;
+  font-size: 12px; color: var(--muted); transform: translateY(-50%);
+  font-variant-numeric: tabular-nums;
+}
+.tl-grid { position: absolute; left: 60px; right: 0; top: 0; bottom: 0; pointer-events: none; }
+.tl-line { position: absolute; left: 0; right: 0; border-top: 1px dashed #e3e7ee; }
+.tl-zone { position: relative; flex: none; height: 100%; }
+.tl-zone.trips { border-left: 2px solid var(--line); }
+.tl-block {
+  position: absolute; border-radius: 6px; padding: 4px 8px;
+  overflow: hidden; font-size: 12px; line-height: 1.35;
+}
+.tl-block.act { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--ink); }
+.tl-block.trip { background: var(--route-soft); border: 1px solid #b9cdea; border-left: 4px solid var(--route); }
+.tl-block.trip.est { border-style: dashed; border-left-style: solid; }
+.tl-time { font-variant-numeric: tabular-nums; color: var(--ink-soft); font-weight: 600; }
+.tl-title { font-weight: 700; font-size: 13px; color: var(--ink); }
+.tl-sub { color: var(--ink-soft); }
+.tl-trip-top { display: flex; justify-content: space-between; align-items: center; gap: 4px; }

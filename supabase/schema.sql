@@ -126,7 +126,7 @@ create table if not exists public.settings (
   key text primary key,
   value jsonb not null
 );
-insert into public.settings (key, value) values ('trip_lead_minutes', '30')
+insert into public.settings (key, value) values ('trip_lead_minutes', '30'), ('default_trip_minutes', '60')
   on conflict (key) do nothing;
 
 -- ---------- 各組人數統計（檢視者也可呼叫，但拿不到個資） ----------

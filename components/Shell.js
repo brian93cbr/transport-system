@@ -6,7 +6,9 @@ import { getSupabase } from '@/lib/supabase/client';
 import { APP_NAME, APP_VERSION, APP_DATE } from '@/lib/constants';
 
 const NAV = [
+  { href: '/overview', label: '日程總覽' },
   { href: '/trips', label: '用車需求' },
+  { href: '/dispatch', label: '派車需求' },
   { href: '/schedule', label: '大會時程表' },
   { href: '/locations', label: '地點庫' },
   { href: '/vendors', label: '廠商與車型', ownerOnly: true },

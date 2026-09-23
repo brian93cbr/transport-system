@@ -31,7 +31,7 @@ export async function middleware(request) {
   }
   if (user && isLogin) {
     const url = request.nextUrl.clone();
-    url.pathname = '/trips';
+    url.pathname = '/overview';
     return NextResponse.redirect(url);
   }
   return response;

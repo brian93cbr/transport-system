@@ -4,7 +4,7 @@ import { getSupabase } from '@/lib/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import Modal from '@/components/Modal';
 import OwnerOnly from '@/components/OwnerOnly';
-import { DEFAULT_LEAD_MINUTES } from '@/lib/constants';
+import { DEFAULT_LEAD_MINUTES, DEFAULT_TRIP_MINUTES } from '@/lib/constants';
 import { dbError } from '@/lib/utils';
 
 export default function SettingsPage() {
@@ -27,6 +27,7 @@ function Settings() {
   const { profile } = useAuth();
   const [users, setUsers] = useState(null);
   const [lead, setLead] = useState('');
+  const [tripMin, setTripMin] = useState('');
   const [creating, setCreating] = useState(false);
   const [resetting, setResetting] = useState(null);
   const [error, setError] = useState('');
@@ -35,11 +36,13 @@ function Settings() {
   const load = useCallback(async () => {
     const [u, s] = await Promise.all([
       supabase.from('profiles').select('*').order('role').order('created_at'),
-      supabase.from('settings').select('value').eq('key', 'trip_lead_minutes').maybeSingle(),
+      supabase.from('settings').select('*'),
     ]);
     if (u.error) setError(dbError(u.error));
     setUsers(u.data || []);
-    setLead(String(s.data ? s.data.value : DEFAULT_LEAD_MINUTES));
+    const st = Object.fromEntries((s.data || []).map((r) => [r.key, r.value]));
+    setLead(String(st.trip_lead_minutes ?? DEFAULT_LEAD_MINUTES));
+    setTripMin(String(st.default_trip_minutes ?? DEFAULT_TRIP_MINUTES));
   }, [supabase]);
 
   useEffect(() => { load(); }, [load]);
@@ -63,8 +66,13 @@ function Settings() {
   async function saveLead(e) {
     e.preventDefault();
     const n = parseInt(lead, 10);
-    if (Number.isNaN(n) || n < 0 || n > 600) return setError('請輸入 0–600 之間的分鐘數。');
-    const { error: err } = await supabase.from('settings').upsert({ key: 'trip_lead_minutes', value: n });
+    const m = parseInt(tripMin, 10);
+    if (Number.isNaN(n) || n < 0 || n > 600) return setError('發車提前分鐘數請輸入 0–600。');
+    if (Number.isNaN(m) || m < 1 || m > 1440) return setError('預設行車時間請輸入 1–1440 分鐘。');
+    const { error: err } = await supabase.from('settings').upsert([
+      { key: 'trip_lead_minutes', value: n },
+      { key: 'default_trip_minutes', value: m },
+    ]);
     if (err) return setError(dbError(err));
     flash('已儲存參數。');
   }
@@ -114,12 +122,17 @@ function Settings() {
       <div className="panel">
         <div className="panel-head"><h2>用車需求參數</h2></div>
         <form className="panel-body" onSubmit={saveLead}>
-          <div className="field" style={{ maxWidth: 360 }}>
-            <label>選擇用車活動時，發車時間預設為活動開始前幾分鐘</label>
-            <div style={{ display: 'flex', gap: 8 }}>
+          <div className="form-grid" style={{ maxWidth: 640 }}>
+            <div className="field">
+              <label>選擇用車活動時，發車時間預設為活動開始前幾分鐘</label>
               <input className="input" type="number" min="0" max="600" value={lead} onChange={(e) => setLead(e.target.value)} />
-              <button className="btn primary">儲存</button>
             </div>
+            <div className="field">
+              <label>沒填預計抵達時間時，假設行車幾分鐘</label>
+              <input className="input" type="number" min="1" max="1440" value={tripMin} onChange={(e) => setTripMin(e.target.value)} />
+              <div className="hint">用於尖峰同時用車數和日程總覽。</div>
+            </div>
+            <div className="full"><button className="btn primary">儲存參數</button></div>
           </div>
         </form>
       </div>
